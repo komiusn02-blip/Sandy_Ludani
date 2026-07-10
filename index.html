@@ -1,0 +1,2449 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+    <title>RealCall Pro - Panggilan Video</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" />
+    <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --primary: #8B5CF6;
+            --primary-light: #A78BFA;
+            --primary-dark: #7C3AED;
+            --primary-gradient: linear-gradient(135deg, #8B5CF6, #6D28D9);
+            --primary-gradient-hover: linear-gradient(135deg, #7C3AED, #5B21B6);
+            --bg-dark: #0a0a0f;
+            --bg-card: rgba(255, 255, 255, 0.06);
+            --text-primary: #ffffff;
+            --text-secondary: #c4b5fd;
+            --text-muted: #8b8ba0;
+            --border-color: rgba(139, 92, 246, 0.15);
+            --shadow-glow: rgba(139, 92, 246, 0.25);
+            --radius: 16px;
+            --radius-sm: 10px;
+        }
+
+        body {
+            font-family: -apple-system, 'Segoe UI', Roboto, system-ui, sans-serif;
+            background: var(--bg-dark);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+            height: 100vh;
+            height: 100dvh;
+            color: var(--text-primary);
+        }
+
+        /* ===== LOGIN SCREEN ===== */
+        .login-screen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            transition: all 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+            padding: 20px;
+            background-image: url('background.jpg');
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+        }
+        .login-screen::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: rgba(10, 10, 15, 0.65);
+            backdrop-filter: blur(3px);
+            z-index: 0;
+        }
+
+        .login-screen.hidden {
+            opacity: 0;
+            pointer-events: none;
+            transform: scale(1.05);
+        }
+
+        .login-content {
+            text-align: center;
+            max-width: 440px;
+            width: 100%;
+            position: relative;
+            z-index: 1;
+        }
+
+        .login-brand {
+            margin-bottom: 32px;
+        }
+
+        .login-icon {
+            width: 100px;
+            height: 100px;
+            background: var(--primary-gradient);
+            border-radius: 30px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 16px;
+            box-shadow: 0 0 60px rgba(139, 92, 246, 0.3);
+            animation: pulseGlow 2.5s ease-in-out infinite;
+            transition: transform 0.3s ease;
+        }
+        .login-icon:hover {
+            transform: scale(1.05);
+        }
+        .login-icon i {
+            font-size: 3.4rem;
+            color: white;
+        }
+
+        @keyframes pulseGlow {
+            0%,
+            100% {
+                box-shadow: 0 0 60px rgba(139, 92, 246, 0.2);
+            }
+            50% {
+                box-shadow: 0 0 80px rgba(139, 92, 246, 0.4);
+            }
+        }
+
+        .login-title {
+            font-size: 2.2rem;
+            font-weight: 800;
+            color: white;
+            letter-spacing: -0.5px;
+            text-shadow: 0 2px 20px rgba(0, 0, 0, 0.3);
+        }
+        .login-title span {
+            background: var(--primary-gradient);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .login-subtitle {
+            color: var(--text-secondary);
+            font-size: 0.95rem;
+            margin-top: 4px;
+            font-weight: 400;
+            text-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+        }
+
+        .login-form {
+            background: rgba(0, 0, 0, 0.7);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border-radius: var(--radius);
+            padding: 32px 28px;
+            border: 1px solid var(--border-color);
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.6);
+            margin-top: 20px;
+        }
+
+        .login-success {
+            display: none;
+            align-items: center;
+            gap: 12px;
+            background: rgba(139, 92, 246, 0.1);
+            border: 1px solid rgba(139, 92, 246, 0.2);
+            border-radius: var(--radius-sm);
+            padding: 12px 16px;
+            margin-bottom: 16px;
+        }
+        .login-success.show {
+            display: flex;
+        }
+        .login-success i {
+            color: var(--primary-light);
+            font-size: 1.2rem;
+        }
+        .login-success .msg {
+            color: var(--primary-light);
+            font-size: 0.85rem;
+            flex: 1;
+            text-align: left;
+        }
+
+        .form-group {
+            text-align: left;
+            margin-bottom: 20px;
+        }
+        .form-group:last-of-type {
+            margin-bottom: 24px;
+        }
+
+        .form-group label {
+            display: block;
+            color: var(--text-secondary);
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 6px;
+        }
+        .form-group label i {
+            margin-right: 6px;
+            color: var(--primary-light);
+        }
+
+        .input-wrapper {
+            display: flex;
+            align-items: center;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: var(--radius-sm);
+            border: 2px solid var(--border-color);
+            overflow: hidden;
+            transition: all 0.3s ease;
+        }
+        .input-wrapper:focus-within {
+            border-color: var(--primary-light);
+            box-shadow: 0 0 0 4px rgba(139, 92, 246, 0.1);
+            background: rgba(255, 255, 255, 0.08);
+        }
+        .input-wrapper.error {
+            border-color: #ff6b6b;
+            box-shadow: 0 0 0 4px rgba(255, 107, 107, 0.08);
+        }
+        .input-wrapper.success {
+            border-color: var(--primary-light);
+            box-shadow: 0 0 0 4px rgba(139, 92, 246, 0.1);
+        }
+
+        .input-wrapper .prefix {
+            padding: 0 14px;
+            color: var(--text-secondary);
+            font-size: 1rem;
+            font-weight: 600;
+            border-right: 1px solid var(--border-color);
+            padding-right: 12px;
+            min-width: 44px;
+            text-align: center;
+        }
+
+        .input-wrapper input {
+            flex: 1;
+            padding: 14px 14px;
+            background: transparent;
+            border: none;
+            color: white;
+            font-size: 1.05rem;
+            outline: none;
+            font-weight: 500;
+            letter-spacing: 0.5px;
+        }
+        .input-wrapper input::placeholder {
+            color: #555;
+            font-weight: 400;
+            font-size: 0.9rem;
+            letter-spacing: 0;
+        }
+        .input-wrapper input[type="number"]::-webkit-inner-spin-button,
+        .input-wrapper input[type="number"]::-webkit-outer-spin-button {
+            -webkit-appearance: none;
+        }
+        .input-wrapper input[type="number"] {
+            -moz-appearance: textfield;
+        }
+
+        .helper-text {
+            color: var(--text-muted);
+            font-size: 0.7rem;
+            margin-top: 6px;
+            padding-left: 4px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            transition: all 0.3s ease;
+        }
+        .helper-text.error {
+            color: #ff6b6b;
+        }
+        .helper-text.success {
+            color: var(--primary-light);
+        }
+        .helper-text .icon {
+            font-size: 0.65rem;
+        }
+
+        .btn-login {
+            background: var(--primary-gradient);
+            border: none;
+            color: white;
+            padding: 16px;
+            border-radius: var(--radius-sm);
+            font-size: 1rem;
+            font-weight: 700;
+            cursor: pointer;
+            width: 100%;
+            box-shadow: 0 4px 20px rgba(139, 92, 246, 0.25);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+        .btn-login::after {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(135deg, transparent, rgba(255, 255, 255, 0.1));
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+        .btn-login:hover::after {
+            opacity: 1;
+        }
+        .btn-login:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 30px rgba(139, 92, 246, 0.35);
+        }
+        .btn-login:active {
+            transform: scale(0.97);
+        }
+        .btn-login:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .saved-info {
+            color: var(--text-muted);
+            font-size: 0.7rem;
+            margin-top: 14px;
+            text-align: center;
+            padding: 10px;
+            background: rgba(255, 255, 255, 0.03);
+            border-radius: var(--radius-sm);
+            border: 1px solid var(--border-color);
+        }
+        .saved-info a {
+            color: var(--primary-light);
+            cursor: pointer;
+            text-decoration: none;
+            font-weight: 600;
+            transition: color 0.3s ease;
+        }
+        .saved-info a:hover {
+            color: #c4b5fd;
+            text-decoration: underline;
+        }
+
+        /* ===== APP CONTAINER ===== */
+        .app-container {
+            width: 100%;
+            height: 100vh;
+            height: 100dvh;
+            background: var(--bg-dark);
+            display: flex;
+            flex-direction: column;
+            position: relative;
+            opacity: 0;
+            transform: scale(0.95);
+            transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+            max-width: 500px;
+            margin: 0 auto;
+        }
+        .app-container.visible {
+            opacity: 1;
+            transform: scale(1);
+        }
+
+        /* ===== HEADER ===== */
+        .app-header {
+            background: rgba(0, 0, 0, 0.7);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            padding: 12px 16px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid var(--border-color);
+            flex-shrink: 0;
+            z-index: 10;
+        }
+        .app-header .user-info {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            color: white;
+        }
+        .app-header .user-info .avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: var(--primary-gradient);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            font-size: 1rem;
+            color: white;
+            flex-shrink: 0;
+            box-shadow: 0 0 20px rgba(139, 92, 246, 0.15);
+        }
+        .app-header .user-info .user-details {
+            display: flex;
+            flex-direction: column;
+        }
+        .app-header .user-info .name {
+            font-weight: 600;
+            font-size: 0.95rem;
+            line-height: 1.2;
+        }
+        .app-header .user-info .number {
+            color: var(--text-secondary);
+            font-size: 0.65rem;
+            font-family: 'Courier New', monospace;
+        }
+
+        .app-header .header-actions {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .media-indicator {
+            display: flex;
+            gap: 8px;
+            padding: 4px 12px;
+            background: rgba(255, 255, 255, 0.04);
+            border-radius: 20px;
+            border: 1px solid var(--border-color);
+        }
+        .media-indicator .indicator {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            font-size: 0.6rem;
+            color: var(--text-muted);
+            padding: 2px 4px;
+            border-radius: 4px;
+            transition: all 0.3s ease;
+        }
+        .media-indicator .indicator i {
+            font-size: 0.7rem;
+        }
+        .media-indicator .indicator.active {
+            color: #8bc34a;
+        }
+        .media-indicator .indicator.inactive {
+            color: #ff6b6b;
+        }
+
+        .logout-btn {
+            background: rgba(255, 255, 255, 0.04);
+            border: 1px solid var(--border-color);
+            color: var(--text-secondary);
+            padding: 6px 14px;
+            border-radius: 20px;
+            cursor: pointer;
+            font-size: 0.7rem;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .logout-btn:hover {
+            background: rgba(255, 255, 255, 0.08);
+            color: white;
+            border-color: rgba(255, 255, 255, 0.15);
+        }
+
+        /* ===== STATUS BAR ===== */
+        .status-bar {
+            background: rgba(0, 0, 0, 0.3);
+            padding: 8px 16px;
+            border-bottom: 1px solid var(--border-color);
+            flex-shrink: 0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            z-index: 10;
+        }
+        .status-bar .status-text {
+            color: var(--text-secondary);
+            font-size: 0.65rem;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .status-bar .status-text .dot {
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: #666;
+            display: inline-block;
+            transition: all 0.3s ease;
+        }
+        .status-bar .status-text .dot.active {
+            background: var(--primary-light);
+            animation: blink 1.2s infinite;
+        }
+        @keyframes blink {
+            0%,
+            100% {
+                opacity: 1;
+            }
+            50% {
+                opacity: 0.2;
+            }
+        }
+        .status-bar .caller-number {
+            color: var(--primary-light);
+            font-size: 0.65rem;
+            font-family: 'Courier New', monospace;
+            background: rgba(139, 92, 246, 0.08);
+            padding: 2px 12px;
+            border-radius: 12px;
+            border: 1px solid rgba(139, 92, 246, 0.1);
+        }
+
+        /* ===== VIDEO CONTAINER ===== */
+        .main-video-container {
+            flex: 1;
+            position: relative;
+            background: #050508;
+            overflow: hidden;
+            min-height: 0;
+        }
+
+        #remoteVideo {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            background: #050508;
+        }
+
+        .remote-placeholder {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            color: #444;
+            text-align: center;
+            pointer-events: none;
+        }
+        .remote-placeholder i {
+            font-size: 4.5rem;
+            color: #2a2a2a;
+            display: block;
+            margin-bottom: 12px;
+        }
+        .remote-placeholder span {
+            font-size: 0.95rem;
+            color: #555;
+        }
+
+        /* ===== CALL INFO OVERLAY ===== */
+        .call-info-overlay {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            text-align: center;
+            pointer-events: none;
+            z-index: 5;
+            transition: opacity 0.4s ease;
+        }
+        .call-info-overlay.hidden {
+            opacity: 0;
+        }
+        .call-info-overlay .caller-avatar {
+            width: 80px;
+            height: 80px;
+            background: linear-gradient(135deg, #1a1a2e, #0f0f1a);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 12px;
+            border: 2px solid rgba(139, 92, 246, 0.2);
+        }
+        .call-info-overlay .caller-avatar i {
+            font-size: 2.8rem;
+            color: var(--primary-light);
+        }
+        .call-info-overlay .caller-name {
+            color: #eee;
+            font-size: 1.4rem;
+            font-weight: 600;
+        }
+        .call-info-overlay .caller-status {
+            color: var(--text-secondary);
+            font-size: 0.85rem;
+            margin-top: 4px;
+        }
+        .call-info-overlay .call-timer {
+            color: var(--primary-light);
+            font-size: 1.3rem;
+            margin-top: 8px;
+            font-family: 'Courier New', monospace;
+            font-weight: 600;
+            letter-spacing: 2px;
+        }
+
+        /* ===== INCOMING CALL ===== */
+        .incoming-call-overlay {
+            position: absolute;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.92);
+            backdrop-filter: blur(24px);
+            -webkit-backdrop-filter: blur(24px);
+            z-index: 50;
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 16px;
+            padding: 40px;
+            animation: slideUp 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .incoming-call-overlay.show {
+            display: flex;
+        }
+
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px) scale(0.95);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0) scale(1);
+            }
+        }
+
+        @keyframes ringPulse {
+            0%,
+            100% {
+                transform: scale(1);
+            }
+            50% {
+                transform: scale(1.08);
+            }
+        }
+
+        .incoming-call-overlay .caller-avatar-big {
+            width: 120px;
+            height: 120px;
+            background: linear-gradient(135deg, #1a1a2e, #0f0f1a);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: 3px solid rgba(139, 92, 246, 0.25);
+            box-shadow: 0 0 60px rgba(139, 92, 246, 0.08);
+        }
+        .incoming-call-overlay .caller-avatar-big.ringing {
+            animation: ringPulse 0.8s ease-in-out infinite;
+        }
+        .incoming-call-overlay .caller-avatar-big i {
+            font-size: 4rem;
+            color: var(--primary-light);
+        }
+
+        .incoming-call-overlay .caller-name-big {
+            color: white;
+            font-size: 1.8rem;
+            font-weight: 700;
+        }
+        .incoming-call-overlay .caller-number-big {
+            color: var(--text-secondary);
+            font-size: 1rem;
+            font-family: 'Courier New', monospace;
+            letter-spacing: 1px;
+        }
+        .incoming-call-overlay .caller-type {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+        .incoming-call-overlay .caller-type i {
+            color: var(--primary-light);
+            margin-right: 6px;
+        }
+
+        .incoming-call-overlay .incoming-actions {
+            display: flex;
+            gap: 50px;
+            margin-top: 16px;
+        }
+        .incoming-call-overlay .incoming-actions button {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            border: none;
+            font-size: 2.2rem;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            flex-direction: column;
+        }
+        .incoming-call-overlay .incoming-actions button:active {
+            transform: scale(0.88);
+        }
+        .incoming-call-overlay .incoming-actions button .label {
+            position: absolute;
+            bottom: -28px;
+            font-size: 0.6rem;
+            color: var(--text-secondary);
+            font-weight: 500;
+            white-space: nowrap;
+        }
+        .incoming-call-overlay .incoming-actions .btn-answer {
+            background: var(--primary-gradient);
+            color: white;
+            box-shadow: 0 0 50px rgba(139, 92, 246, 0.25);
+        }
+        .incoming-call-overlay .incoming-actions .btn-answer:hover {
+            transform: scale(1.05);
+            box-shadow: 0 0 70px rgba(139, 92, 246, 0.35);
+        }
+        .incoming-call-overlay .incoming-actions .btn-reject {
+            background: linear-gradient(135deg, #dc2626, #8a1a1a);
+            color: white;
+            box-shadow: 0 0 50px rgba(220, 38, 38, 0.2);
+        }
+        .incoming-call-overlay .incoming-actions .btn-reject:hover {
+            transform: scale(1.05);
+            box-shadow: 0 0 70px rgba(220, 38, 38, 0.3);
+        }
+
+        /* ===== LOCAL VIDEO ===== */
+        .local-video-container {
+            position: absolute;
+            bottom: 130px;
+            right: 16px;
+            width: 130px;
+            height: 175px;
+            border-radius: var(--radius);
+            overflow: hidden;
+            border: 2px solid rgba(139, 92, 246, 0.2);
+            box-shadow: 0 8px 40px rgba(0, 0, 0, 0.7);
+            z-index: 10;
+            background: #0f0f1a;
+            cursor: pointer;
+            touch-action: none;
+            transition: all 0.3s ease;
+        }
+        .local-video-container:hover {
+            border-color: rgba(139, 92, 246, 0.3);
+        }
+
+        #localVideo {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            background: #0f0f1a;
+        }
+
+        .local-placeholder {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            color: #444;
+            text-align: center;
+            pointer-events: none;
+            font-size: 0.65rem;
+        }
+        .local-placeholder i {
+            font-size: 2rem;
+            color: #333;
+            display: block;
+            margin-bottom: 4px;
+        }
+        .local-placeholder span {
+            color: #555;
+        }
+
+        .local-label {
+            position: absolute;
+            bottom: 6px;
+            left: 8px;
+            background: rgba(0, 0, 0, 0.7);
+            padding: 2px 10px;
+            border-radius: 8px;
+            font-size: 0.5rem;
+            color: #aaa;
+            pointer-events: none;
+            backdrop-filter: blur(4px);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .zoom-btn {
+            position: absolute;
+            top: 16px;
+            right: 16px;
+            background: rgba(0, 0, 0, 0.6);
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+            border: 1px solid rgba(139, 92, 246, 0.15);
+            color: white;
+            width: 44px;
+            height: 44px;
+            border-radius: 50%;
+            font-size: 1.1rem;
+            cursor: pointer;
+            z-index: 15;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s ease;
+        }
+        .zoom-btn:hover {
+            background: rgba(139, 92, 246, 0.15);
+            transform: scale(1.05);
+            border-color: var(--primary-light);
+        }
+
+        /* ===== CALL CONTROLS ===== */
+        .call-controls {
+            position: absolute;
+            bottom: 30px;
+            left: 0;
+            right: 0;
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            padding: 0 20px;
+            z-index: 20;
+            background: linear-gradient(to top, rgba(0, 0, 0, 0.6), transparent);
+            padding-top: 40px;
+            padding-bottom: calc(24px + env(safe-area-inset-bottom, 0px));
+        }
+
+        .ctrl-btn {
+            width: 64px;
+            height: 64px;
+            border-radius: 50%;
+            border: none;
+            background: rgba(255, 255, 255, 0.06);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            color: white;
+            font-size: 1.5rem;
+            cursor: pointer;
+            transition: all 0.25s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: 1px solid rgba(139, 92, 246, 0.08);
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+            position: relative;
+        }
+        .ctrl-btn .tooltip {
+            position: absolute;
+            bottom: -28px;
+            font-size: 0.55rem;
+            color: var(--text-secondary);
+            font-weight: 500;
+            white-space: nowrap;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+            pointer-events: none;
+        }
+        .ctrl-btn:hover .tooltip {
+            opacity: 1;
+        }
+
+        .ctrl-btn:active {
+            transform: scale(0.88);
+        }
+
+        .ctrl-btn.active {
+            background: rgba(139, 92, 246, 0.15);
+            border-color: rgba(139, 92, 246, 0.2);
+            box-shadow: 0 4px 20px rgba(139, 92, 246, 0.08);
+        }
+        .ctrl-btn.off {
+            background: rgba(200, 50, 50, 0.12);
+            border-color: rgba(200, 50, 50, 0.1);
+        }
+        .ctrl-btn.speaker-on {
+            background: rgba(139, 92, 246, 0.2);
+            border-color: var(--primary-light);
+            box-shadow: 0 4px 20px rgba(139, 92, 246, 0.1);
+        }
+
+        .ctrl-btn.end-call {
+            background: linear-gradient(135deg, #e74c3c, #c0392b);
+            border-color: #e74c3c;
+            width: 72px;
+            height: 72px;
+            box-shadow: 0 4px 30px rgba(231, 76, 60, 0.2);
+        }
+        .ctrl-btn.end-call:hover {
+            transform: scale(1.05);
+            box-shadow: 0 6px 40px rgba(231, 76, 60, 0.3);
+        }
+        .ctrl-btn.end-call .tooltip {
+            bottom: -28px;
+        }
+
+        /* ===== CALL INPUT - PROFESIONAL ===== */
+        .call-input-section {
+            background: rgba(0, 0, 0, 0.85);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            padding: 16px 20px 18px;
+            border-top: 1px solid var(--border-color);
+            flex-shrink: 0;
+        }
+
+        .call-input-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 10px;
+        }
+
+        .call-input-header .input-title {
+            color: var(--text-secondary);
+            font-size: 0.65rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.8px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .call-input-header .input-title i {
+            color: var(--primary-light);
+            font-size: 0.75rem;
+        }
+
+        .call-input-header .input-badge {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            background: rgba(139, 92, 246, 0.08);
+            border: 1px solid rgba(139, 92, 246, 0.1);
+            padding: 3px 10px;
+            border-radius: 12px;
+            font-size: 0.5rem;
+            color: var(--text-secondary);
+            font-weight: 500;
+        }
+        .call-input-header .input-badge i {
+            color: var(--primary-light);
+            font-size: 0.5rem;
+        }
+
+        .call-input-wrapper {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .call-input-group {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            background: rgba(255, 255, 255, 0.04);
+            border-radius: var(--radius-sm);
+            border: 2px solid var(--border-color);
+            overflow: hidden;
+            transition: all 0.3s ease;
+            position: relative;
+        }
+        .call-input-group:focus-within {
+            border-color: var(--primary-light);
+            box-shadow: 0 0 0 4px rgba(139, 92, 246, 0.06);
+            background: rgba(255, 255, 255, 0.06);
+        }
+        .call-input-group.error {
+            border-color: #ff6b6b;
+            box-shadow: 0 0 0 4px rgba(255, 107, 107, 0.06);
+        }
+        .call-input-group.success {
+            border-color: var(--primary-light);
+            box-shadow: 0 0 0 4px rgba(139, 92, 246, 0.06);
+        }
+
+        .call-input-group .prefix-sm {
+            padding: 0 10px 0 14px;
+            color: var(--text-secondary);
+            font-size: 0.8rem;
+            font-weight: 600;
+            border-right: 1px solid var(--border-color);
+            padding-right: 10px;
+            min-width: 36px;
+            text-align: center;
+        }
+
+        .call-input-group input {
+            flex: 1;
+            background: transparent;
+            border: none;
+            padding: 12px 14px;
+            color: white;
+            font-size: 1rem;
+            outline: none;
+            font-family: 'Courier New', monospace;
+            letter-spacing: 1px;
+            font-weight: 500;
+        }
+        .call-input-group input::placeholder {
+            color: #444;
+            font-size: 0.85rem;
+            font-weight: 400;
+            font-family: -apple-system, 'Segoe UI', Roboto, system-ui, sans-serif;
+            letter-spacing: 0;
+        }
+        .call-input-group input[type="number"]::-webkit-inner-spin-button,
+        .call-input-group input[type="number"]::-webkit-outer-spin-button {
+            -webkit-appearance: none;
+        }
+        .call-input-group input[type="number"] {
+            -moz-appearance: textfield;
+        }
+
+        .call-input-group .input-status {
+            position: absolute;
+            right: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 0.7rem;
+            color: var(--text-muted);
+            pointer-events: none;
+            transition: all 0.3s ease;
+        }
+        .call-input-group .input-status.valid {
+            color: var(--primary-light);
+        }
+        .call-input-group .input-status.invalid {
+            color: #ff6b6b;
+        }
+
+        .btn-call {
+            background: var(--primary-gradient);
+            border: none;
+            color: white;
+            padding: 12px 28px;
+            border-radius: var(--radius-sm);
+            font-weight: 700;
+            font-size: 0.9rem;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            white-space: nowrap;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 20px rgba(139, 92, 246, 0.15);
+            min-width: 120px;
+            justify-content: center;
+            position: relative;
+            overflow: hidden;
+        }
+        .btn-call::after {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(135deg, transparent, rgba(255, 255, 255, 0.1));
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+        .btn-call:hover::after {
+            opacity: 1;
+        }
+        .btn-call:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 30px rgba(139, 92, 246, 0.25);
+        }
+        .btn-call:active {
+            transform: scale(0.95);
+        }
+        .btn-call i {
+            font-size: 1rem;
+        }
+
+        .call-status-bar {
+            margin-top: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        .call-status-bar .status-text {
+            color: var(--text-muted);
+            font-size: 0.6rem;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .call-status-bar .status-text .dot-small {
+            width: 5px;
+            height: 5px;
+            border-radius: 50%;
+            background: #555;
+            display: inline-block;
+            transition: all 0.3s ease;
+        }
+        .call-status-bar .status-text .dot-small.active {
+            background: var(--primary-light);
+            animation: blink 1.2s infinite;
+        }
+        .call-status-bar .status-text .dot-small.error {
+            background: #ff6b6b;
+        }
+
+        .call-status-bar .status-hint {
+            color: var(--text-muted);
+            font-size: 0.55rem;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+        .call-status-bar .status-hint i {
+            font-size: 0.5rem;
+        }
+
+        /* ===== TOAST ===== */
+        .toast-notification {
+            position: fixed;
+            bottom: 120px;
+            left: 50%;
+            transform: translateX(-50%) translateY(20px);
+            background: rgba(16, 16, 24, 0.96);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            color: #eee;
+            padding: 12px 24px;
+            border-radius: 30px;
+            font-size: 0.85rem;
+            border: 1px solid var(--border-color);
+            box-shadow: 0 8px 40px rgba(0, 0, 0, 0.7);
+            opacity: 0;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            pointer-events: none;
+            z-index: 999;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            max-width: 90%;
+        }
+        .toast-notification.show {
+            opacity: 1;
+            transform: translateX(-50%) translateY(0);
+        }
+        .toast-notification i {
+            font-size: 1rem;
+        }
+        .toast-notification .toast-icon-success {
+            color: var(--primary-light);
+        }
+        .toast-notification .toast-icon-error {
+            color: #ff6b6b;
+        }
+
+        /* ===== RESPONSIVE ===== */
+        @media (max-width: 480px) {
+            .local-video-container {
+                width: 100px;
+                height: 135px;
+                bottom: 110px;
+                right: 12px;
+                border-radius: 12px;
+            }
+
+            .ctrl-btn {
+                width: 56px;
+                height: 56px;
+                font-size: 1.3rem;
+            }
+            .ctrl-btn.end-call {
+                width: 64px;
+                height: 64px;
+            }
+            .call-controls {
+                gap: 14px;
+                bottom: 24px;
+                padding-bottom: 20px;
+            }
+
+            .login-title {
+                font-size: 1.8rem;
+            }
+            .login-icon {
+                width: 80px;
+                height: 80px;
+                border-radius: 24px;
+            }
+            .login-icon i {
+                font-size: 2.6rem;
+            }
+            .login-form {
+                padding: 20px 16px;
+            }
+
+            .call-input-section {
+                padding: 12px 14px 14px;
+            }
+            .call-input-wrapper {
+                flex-direction: column;
+                gap: 8px;
+            }
+            .btn-call {
+                width: 100%;
+                min-width: unset;
+                padding: 12px;
+            }
+            .call-input-group input {
+                font-size: 0.85rem;
+                padding: 10px 12px;
+            }
+            .call-input-header .input-badge {
+                display: none;
+            }
+            .call-status-bar {
+                flex-direction: column;
+                gap: 4px;
+                align-items: flex-start;
+            }
+
+            .call-info-overlay .caller-avatar {
+                width: 64px;
+                height: 64px;
+            }
+            .call-info-overlay .caller-avatar i {
+                font-size: 2.2rem;
+            }
+            .call-info-overlay .caller-name {
+                font-size: 1.1rem;
+            }
+
+            .incoming-call-overlay .caller-avatar-big {
+                width: 90px;
+                height: 90px;
+            }
+            .incoming-call-overlay .caller-avatar-big i {
+                font-size: 3rem;
+            }
+            .incoming-call-overlay .caller-name-big {
+                font-size: 1.4rem;
+            }
+            .incoming-call-overlay .incoming-actions button {
+                width: 68px;
+                height: 68px;
+                font-size: 1.8rem;
+            }
+            .incoming-call-overlay .incoming-actions {
+                gap: 30px;
+            }
+
+            .app-header .user-info .avatar {
+                width: 34px;
+                height: 34px;
+                font-size: 0.8rem;
+            }
+            .app-header .user-info .name {
+                font-size: 0.8rem;
+            }
+            .media-indicator {
+                padding: 3px 8px;
+            }
+            .media-indicator .indicator {
+                font-size: 0.5rem;
+            }
+            .media-indicator .indicator i {
+                font-size: 0.6rem;
+            }
+        }
+
+        @media (min-width: 600px) {
+            .app-container {
+                max-width: 440px;
+                max-height: 850px;
+                border-radius: 36px;
+                box-shadow: 0 30px 80px rgba(0, 0, 0, 0.8);
+                margin: 20px auto;
+            }
+            .local-video-container {
+                width: 150px;
+                height: 200px;
+                bottom: 130px;
+                right: 18px;
+                border-radius: var(--radius);
+            }
+            .ctrl-btn {
+                width: 72px;
+                height: 72px;
+                font-size: 1.6rem;
+            }
+            .ctrl-btn.end-call {
+                width: 80px;
+                height: 80px;
+            }
+            .call-controls {
+                gap: 24px;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- ===== LOGIN SCREEN ===== -->
+    <div class="login-screen" id="loginScreen">
+        <div class="login-content">
+            <div class="login-brand">
+                <div class="login-icon"><i class="fas fa-phone-alt"></i></div>
+                <h1 class="login-title">S@ndy<span>Lud@ni</span></h1>
+                <p class="login-subtitle">Panggilan Video &amp; Suara Berkualitas</p>
+            </div>
+
+            <div class="login-form">
+                <div class="login-success" id="loginSuccess">
+                    <i class="fas fa-check-circle"></i>
+                    <span class="msg" id="loginSuccessMsg">Login berhasil!</span>
+                </div>
+
+                <div class="form-group">
+                    <label><i class="fas fa-mobile-alt"></i> Nomor Telepon</label>
+                    <div class="input-wrapper" id="phoneWrapper">
+                        <span class="prefix">+62</span>
+                        <input type="number" id="phoneInput" placeholder="8123456789" maxlength="10" />
+                    </div>
+                    <div class="helper-text" id="phoneHelper">
+                        <span class="icon">ℹ️</span>
+                        <span>Masukkan 10 digit angka (contoh: 8123456789)</span>
+                    </div>
+                </div>
+
+                <button class="btn-login" id="loginBtn" onclick="handleLogin()">
+                    <i class="fas fa-sign-in-alt"></i> Masuk
+                </button>
+
+                <div class="saved-info" id="savedInfo" style="display:none;">
+                    <i class="fas fa-history"></i> Login terakhir: <span id="savedNumber"></span>
+                    <a id="useSavedBtn" onclick="useSaved()">Gunakan</a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ===== APP CONTAINER ===== -->
+    <div class="app-container" id="appContainer">
+        <!-- HEADER -->
+        <div class="app-header">
+            <div class="user-info">
+                <div class="avatar" id="userAvatar">S</div>
+                <div class="user-details">
+                    <div class="name" id="userName">Pengguna</div>
+                    <div class="number" id="userNumber">+62 8123456789</div>
+                </div>
+            </div>
+            <div class="header-actions">
+                <div class="media-indicator" id="mediaIndicator">
+                    <span class="indicator" id="micIndicator"><i class="fas fa-microphone"></i></span>
+                    <span class="indicator" id="camIndicator"><i class="fas fa-video"></i></span>
+                </div>
+                <button class="logout-btn" onclick="logout()"><i class="fas fa-sign-out-alt"></i></button>
+            </div>
+        </div>
+
+        <!-- STATUS BAR -->
+        <div class="status-bar">
+            <div class="status-text" id="statusBar">
+                <span class="dot" id="statusDot"></span>
+                <span id="statusText">Siap memanggil</span>
+            </div>
+            <div class="caller-number" id="callerNumberDisplay">-</div>
+        </div>
+
+        <!-- VIDEO CONTAINER -->
+        <div class="main-video-container" id="mainVideoContainer">
+            <video id="remoteVideo" autoplay playsinline></video>
+
+            <div class="remote-placeholder" id="remotePlaceholder">
+                <i class="fas fa-user-friends"></i>
+                <span>Menunggu panggilan...</span>
+            </div>
+
+            <div class="call-info-overlay" id="callInfoOverlay">
+                <div class="caller-avatar"><i class="fas fa-user"></i></div>
+                <div class="caller-name" id="callerName">Menunggu</div>
+                <div class="caller-status" id="callerStatus">Siap melakukan panggilan</div>
+                <div class="call-timer" id="callTimer">00:00</div>
+            </div>
+
+            <!-- INCOMING CALL -->
+            <div class="incoming-call-overlay" id="incomingCallOverlay">
+                <div class="caller-avatar-big ringing" id="ringingAvatar">
+                    <i class="fas fa-phone-alt"></i>
+                </div>
+                <div class="caller-name-big" id="incomingCallerName">Panggilan Masuk</div>
+                <div class="caller-number-big" id="incomingCallerNumber">+62 8123456789</div>
+                <div class="caller-type" id="incomingCallType"><i class="fas fa-video"></i> Panggilan Video</div>
+                <div class="incoming-actions">
+                    <button class="btn-reject" onclick="rejectCall()">
+                        <i class="fas fa-times"></i>
+                        <span class="label">Tolak</span>
+                    </button>
+                    <button class="btn-answer" onclick="answerCall()">
+                        <i class="fas fa-phone"></i>
+                        <span class="label">Terima</span>
+                    </button>
+                </div>
+            </div>
+
+            <button class="zoom-btn" onclick="toggleFullscreen()" title="Layar Penuh">
+                <i class="fas fa-expand"></i>
+            </button>
+
+            <!-- LOCAL VIDEO -->
+            <div class="local-video-container" id="localVideoContainer">
+                <video id="localVideo" autoplay muted playsinline></video>
+                <div class="local-placeholder" id="localPlaceholder">
+                    <i class="fas fa-video"></i>
+                    <span>Kamera</span>
+                </div>
+                <span class="local-label">Anda</span>
+            </div>
+
+            <!-- CONTROLS -->
+            <div class="call-controls">
+                <button class="ctrl-btn active" onclick="toggleMute()" id="micBtn">
+                    <i class="fas fa-microphone"></i>
+                    <span class="tooltip">Mikrofon</span>
+                </button>
+                <button class="ctrl-btn" onclick="toggleSpeaker()" id="speakerBtn">
+                    <i class="fas fa-volume-up"></i>
+                    <span class="tooltip">Speaker</span>
+                </button>
+                <button class="ctrl-btn active" onclick="toggleVideo()" id="videoBtn">
+                    <i class="fas fa-video"></i>
+                    <span class="tooltip">Kamera</span>
+                </button>
+                <button class="ctrl-btn end-call" onclick="endCall()">
+                    <i class="fas fa-phone-slash"></i>
+                    <span class="tooltip">Tutup</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- ===== CALL INPUT - PROFESIONAL ===== -->
+        <div class="call-input-section">
+            <!-- Header dengan badge -->
+            <div class="call-input-header">
+                <div class="input-title">
+                    <i class="fas fa-phone"></i> Panggil Nomor
+                </div>
+                <div class="input-badge">
+                    <i class="fas fa-info-circle"></i>
+                    Format: 08xxxxxxxx
+                </div>
+            </div>
+
+            <!-- Input wrapper -->
+            <div class="call-input-wrapper">
+                <div class="call-input-group" id="callInputGroup">
+                    <span class="prefix-sm">+62</span>
+                    <input type="number" id="callInput" placeholder="8123456789" maxlength="10" />
+                    <span class="input-status" id="inputStatus"></span>
+                </div>
+                <button class="btn-call" onclick="makeCall()">
+                    <i class="fas fa-phone"></i> Panggil
+                </button>
+            </div>
+
+            <!-- Status bar -->
+            <div class="call-status-bar">
+                <div class="status-text" id="callStatus">
+                    <span class="dot-small" id="callStatusDot"></span>
+                    <span id="callStatusText">Masukkan nomor tujuan (08xxxxxxxx)</span>
+                </div>
+                <div class="status-hint">
+                    <i class="fas fa-keyboard"></i>
+                    <span>10 digit</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- TOAST -->
+    <div class="toast-notification" id="toastNotification">
+        <i class="fas fa-check-circle toast-icon-success" id="toastIcon"></i>
+        <span id="toastMessage">Berhasil!</span>
+    </div>
+
+    <script>
+        // ========================================
+        // VARIABEL GLOBAL
+        // ========================================
+        let peer = null;
+        let currentCall = null;
+        let localStream = null;
+        let remoteStream = null;
+        let isCallActive = false;
+        let isMuted = false;
+        let isVideoOff = false;
+        let isSpeakerOn = false;
+        let toastTimeout = null;
+        let callTimerInterval = null;
+        let incomingCall = null;
+        let isIncomingCall = false;
+        let myNumber = '';
+        let myPeerId = '';
+        let ringtoneInterval = null;
+
+        // ========================================
+        // STORAGE
+        // ========================================
+        function saveUser(number) { localStorage.setItem('realcall_user', number); }
+
+        function getUser() { return localStorage.getItem('realcall_user'); }
+
+        function clearUser() { localStorage.removeItem('realcall_user'); }
+
+        // ========================================
+        // TOAST
+        // ========================================
+        function showToast(message, isSuccess = true) {
+            const toast = document.getElementById('toastNotification');
+            const toastMsg = document.getElementById('toastMessage');
+            const toastIcon = document.getElementById('toastIcon');
+            toastMsg.textContent = message;
+            toast.className = 'toast-notification show';
+            toastIcon.className = isSuccess ? 'fas fa-check-circle toast-icon-success' :
+                'fas fa-exclamation-circle toast-icon-error';
+            if (toastTimeout) clearTimeout(toastTimeout);
+            toastTimeout = setTimeout(() => { toast.classList.remove('show'); }, 3500);
+        }
+
+        // ========================================
+        // RINGTONE
+        // ========================================
+        function playRingtone() {
+            try {
+                const audioCtx = new(window.AudioContext || window.webkitAudioContext)();
+                const frequencies = [440, 580];
+                let noteIndex = 0;
+                let isPlaying = true;
+
+                function playNote() {
+                    if (!isPlaying) return;
+                    try {
+                        const osc = audioCtx.createOscillator();
+                        const gain = audioCtx.createGain();
+                        osc.type = 'sine';
+                        osc.frequency.value = frequencies[noteIndex % 2];
+                        gain.gain.value = 0.12;
+                        gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.4);
+                        osc.connect(gain);
+                        gain.connect(audioCtx.destination);
+                        osc.start(audioCtx.currentTime);
+                        osc.stop(audioCtx.currentTime + 0.4);
+                        noteIndex++;
+                        ringtoneInterval = setTimeout(function() {
+                            if (isPlaying) playNote();
+                        }, 500);
+                    } catch (e) { isPlaying = false; }
+                }
+
+                playNote();
+                window._ringtonePlaying = true;
+                window._ringtoneStop = function() {
+                    isPlaying = false;
+                    if (ringtoneInterval) {
+                        clearTimeout(ringtoneInterval);
+                        ringtoneInterval = null;
+                    }
+                    window._ringtonePlaying = false;
+                };
+            } catch (e) {
+                console.log('Ringtone error:', e);
+            }
+        }
+
+        function stopRingtone() {
+            if (window._ringtoneStop) {
+                window._ringtoneStop();
+            }
+            if (ringtoneInterval) {
+                clearTimeout(ringtoneInterval);
+                ringtoneInterval = null;
+            }
+            window._ringtonePlaying = false;
+        }
+
+        // ========================================
+        // NOTIFICATION
+        // ========================================
+        function sendBrowserNotification(title, body) {
+            if (!('Notification' in window)) return;
+            if (Notification.permission === 'granted') {
+                new Notification(title, {
+                    body: body,
+                    icon: 'https://cdn-icons-png.flaticon.com/512/724/724664.png',
+                    vibrate: [200, 100, 200],
+                    requireInteraction: true
+                });
+            } else if (Notification.permission !== 'denied') {
+                Notification.requestPermission();
+            }
+        }
+
+        // ========================================
+        // VALIDASI - HARUS 08 DAN 10 DIGIT
+        // ========================================
+        function validatePhone(number) {
+            const clean = number.replace(/\D/g, '');
+
+            if (!clean.startsWith('08')) {
+                return { valid: false, message: '❌ Nomor harus diawali 08' };
+            }
+
+            if (clean.length !== 10) {
+                return { valid: false, message: '❌ Nomor harus 10 digit angka' };
+            }
+
+            if (!/^\d{10}$/.test(clean)) {
+                return { valid: false, message: '❌ Hanya angka yang diperbolehkan' };
+            }
+
+            return { valid: true, message: '✅ Nomor valid', number: clean };
+        }
+
+        // ========================================
+        // UPDATE MEDIA INDICATOR
+        // ========================================
+        function updateMediaIndicator() {
+            const micInd = document.getElementById('micIndicator');
+            const camInd = document.getElementById('camIndicator');
+            if (localStream) {
+                const audioTrack = localStream.getAudioTracks()[0];
+                const videoTrack = localStream.getVideoTracks()[0];
+                micInd.className = 'indicator ' + (audioTrack?.enabled ? 'active' : 'inactive');
+                camInd.className = 'indicator ' + (videoTrack?.enabled ? 'active' : 'inactive');
+            }
+        }
+
+        // ========================================
+        // UPDATE STATUS UI
+        // ========================================
+        function updatePhoneUI(input, wrapper, helper, isValid, message) {
+            wrapper.className = 'input-wrapper ' + (isValid ? 'success' : 'error');
+            helper.className = 'helper-text ' + (isValid ? 'success' : 'error');
+            helper.innerHTML = `<span class="icon">${isValid ? '✅' : '❌'}</span><span>${message}</span>`;
+        }
+
+        // ========================================
+        // REAL-TIME INPUT VALIDATION
+        // ========================================
+        document.addEventListener('DOMContentLoaded', function() {
+            const callInput = document.getElementById('callInput');
+            const inputGroup = document.getElementById('callInputGroup');
+            const inputStatus = document.getElementById('inputStatus');
+            const statusDot = document.getElementById('callStatusDot');
+            const statusText = document.getElementById('callStatusText');
+
+            callInput.addEventListener('input', function() {
+                const value = this.value.trim();
+                if (value.length === 0) {
+                    inputGroup.className = 'call-input-group';
+                    inputStatus.textContent = '';
+                    statusDot.className = 'dot-small';
+                    statusDot.style.background = '#555';
+                    statusText.textContent = 'Masukkan nomor tujuan (08xxxxxxxx)';
+                    return;
+                }
+
+                const result = validatePhone(value);
+                if (result.valid) {
+                    inputGroup.className = 'call-input-group success';
+                    inputStatus.textContent = '✓';
+                    inputStatus.className = 'input-status valid';
+                    statusDot.className = 'dot-small active';
+                    statusDot.style.background = 'var(--primary-light)';
+                    statusText.textContent = '✅ Nomor valid - Tekan Panggil';
+                } else {
+                    inputGroup.className = 'call-input-group error';
+                    inputStatus.textContent = '✗';
+                    inputStatus.className = 'input-status invalid';
+                    statusDot.className = 'dot-small error';
+                    statusDot.style.background = '#ff6b6b';
+                    statusText.textContent = result.message;
+                }
+            });
+        });
+
+        // ========================================
+        // LOGIN
+        // ========================================
+        function handleLogin() {
+            const phoneInput = document.getElementById('phoneInput');
+            const phoneWrapper = document.getElementById('phoneWrapper');
+            const phoneHelper = document.getElementById('phoneHelper');
+            const loginBtn = document.getElementById('loginBtn');
+            const loginSuccess = document.getElementById('loginSuccess');
+            const loginSuccessMsg = document.getElementById('loginSuccessMsg');
+
+            const raw = phoneInput.value.trim();
+            const result = validatePhone(raw);
+
+            if (!result.valid) {
+                updatePhoneUI(phoneInput, phoneWrapper, phoneHelper, false, result.message);
+                showToast(result.message, false);
+                return;
+            }
+
+            updatePhoneUI(phoneInput, phoneWrapper, phoneHelper, true, '✅ Nomor valid');
+
+            myNumber = result.number;
+            saveUser(myNumber);
+
+            loginSuccessMsg.textContent = 'Login berhasil! +62 ' + myNumber;
+            loginSuccess.className = 'login-success show';
+
+            loginBtn.disabled = true;
+            loginBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Menghubungkan...';
+
+            if ('Notification' in window && Notification.permission === 'default') {
+                Notification.requestPermission();
+            }
+
+            const mediaConstraints = {
+                audio: {
+                    echoCancellation: true,
+                    noiseSuppression: true,
+                    autoGainControl: true
+                },
+                video: {
+                    width: { ideal: 640 },
+                    height: { ideal: 480 },
+                    facingMode: 'user',
+                    frameRate: { ideal: 30 }
+                }
+            };
+
+            navigator.mediaDevices.getUserMedia(mediaConstraints)
+                .then(function(stream) {
+                    console.log('📷 Media berhasil diakses!');
+                    localStream = stream;
+                    document.getElementById('localVideo').srcObject = stream;
+                    document.getElementById('localPlaceholder').style.display = 'none';
+                    updateMediaIndicator();
+                    loginToPeer(myNumber);
+                })
+                .catch(function(err) {
+                    console.error('❌ Gagal akses media:', err);
+                    navigator.mediaDevices.getUserMedia({
+                            audio: {
+                                echoCancellation: true,
+                                noiseSuppression: true,
+                                autoGainControl: true
+                            },
+                            video: false
+                        })
+                        .then(function(stream) {
+                            console.log('📷 Audio only (fallback)');
+                            localStream = stream;
+                            document.getElementById('localVideo').srcObject = stream;
+                            document.getElementById('localPlaceholder').style.display = 'flex';
+                            document.getElementById('localPlaceholder').innerHTML =
+                                '<i class="fas fa-microphone"></i><span>Audio Only</span>';
+                            updateMediaIndicator();
+                            loginToPeer(myNumber);
+                        })
+                        .catch(function(e2) {
+                            showToast('❌ Tidak ada akses media: ' + e2.message, false);
+                            loginBtn.disabled = false;
+                            loginBtn.innerHTML = '<i class="fas fa-sign-in-alt"></i> Masuk';
+                        });
+                });
+        }
+
+        function loginToPeer(number) {
+            const peerId = 'rc_' + number;
+
+            if (peer) { peer.destroy();
+                peer = null; }
+
+            peer = new Peer(peerId, {
+                debug: 2,
+                config: {
+                    iceServers: [
+                        { urls: 'stun:stun.l.google.com:19302' },
+                        { urls: 'stun:stun1.l.google.com:19302' },
+                        { urls: 'stun:stun2.l.google.com:19302' }
+                    ]
+                }
+            });
+
+            peer.on('open', function(id) {
+                console.log('✅ Peer terbuka:', id);
+                myPeerId = id;
+                showToast('✅ Login berhasil!', true);
+
+                setTimeout(function() {
+                    document.getElementById('loginScreen').classList.add('hidden');
+                    document.getElementById('appContainer').classList.add('visible');
+                    initApp(number);
+                }, 500);
+            });
+
+            peer.on('error', function(err) {
+                console.error('❌ Peer error:', err);
+                const loginBtn = document.getElementById('loginBtn');
+                loginBtn.disabled = false;
+                loginBtn.innerHTML = '<i class="fas fa-sign-in-alt"></i> Masuk';
+
+                if (err.type === 'unavailable-id') {
+                    showToast('❌ Nomor sudah digunakan', false);
+                    document.getElementById('phoneHelper').className = 'helper-text error';
+                    document.getElementById('phoneHelper').innerHTML =
+                        '<span class="icon">❌</span><span>Nomor sudah terdaftar</span>';
+                } else {
+                    showToast('❌ Gagal terhubung: ' + err.message, false);
+                }
+            });
+
+            peer.on('call', function(call) {
+                console.log('📞 Panggilan masuk dari:', call.peer);
+                handleIncomingCall(call);
+            });
+        }
+
+        function useSaved() {
+            const saved = getUser();
+            if (saved) {
+                document.getElementById('phoneInput').value = saved;
+                handleLogin();
+            }
+        }
+
+        // ========================================
+        // APP INIT
+        // ========================================
+        function initApp(number) {
+            const displayNumber = number.slice(0, 4) + ' ' + number.slice(4, 7) + ' ' + number.slice(7);
+            document.getElementById('userNumber').textContent = '+62 ' + displayNumber;
+            document.getElementById('userAvatar').textContent = number.slice(0, 2).toUpperCase();
+            document.getElementById('userName').textContent = 'Pengguna ' + number.slice(-4);
+            setStatus('Siap memanggil', false);
+            setCallerInfo('Menunggu', '-', 'Siap melakukan panggilan');
+            if (localStream) {
+                document.getElementById('localVideo').srcObject = localStream;
+                document.getElementById('localPlaceholder').style.display = 'none';
+                updateMediaIndicator();
+            }
+        }
+
+        // ========================================
+        // INCOMING CALL
+        // ========================================
+        function handleIncomingCall(call) {
+            if (isCallActive) {
+                call.close();
+                return;
+            }
+
+            incomingCall = call;
+            isIncomingCall = true;
+            const isVideo = call.metadata?.video || false;
+            const callerNumber = call.peer.replace('rc_', '');
+            const displayNumber = callerNumber.slice(0, 4) + ' ' + callerNumber.slice(4, 7) + ' ' + callerNumber.slice(7);
+
+            document.getElementById('incomingCallerName').textContent = 'Panggilan Masuk';
+            document.getElementById('incomingCallerNumber').textContent = '+62 ' + displayNumber;
+            document.getElementById('incomingCallType').innerHTML = isVideo ?
+                '<i class="fas fa-video"></i> Panggilan Video' :
+                '<i class="fas fa-phone"></i> Panggilan Suara';
+            document.getElementById('incomingCallOverlay').classList.add('show');
+            document.getElementById('ringingAvatar').classList.add('ringing');
+
+            playRingtone();
+
+            if (navigator.vibrate) {
+                navigator.vibrate([500, 200, 500, 200, 500]);
+                window._vibrateInterval = setInterval(function() {
+                    navigator.vibrate([500, 200, 500, 200, 500]);
+                }, 3000);
+            }
+
+            sendBrowserNotification(
+                '📞 Panggilan Masuk',
+                `+62 ${displayNumber} ${isVideo ? 'memanggil Anda (Video)' : 'memanggil Anda (Suara)'}`
+            );
+
+            showToast(`📞 Panggilan ${isVideo ? 'video' : 'suara'} dari +62 ${displayNumber}`, true);
+        }
+
+        // ========================================
+        // ANSWER / REJECT CALL
+        // ========================================
+        function answerCall() {
+            stopRingtone();
+            if (window._vibrateInterval) {
+                clearInterval(window._vibrateInterval);
+                window._vibrateInterval = null;
+            }
+
+            if (!incomingCall) return;
+            const isVideo = incomingCall.metadata?.video || false;
+
+            if (localStream) {
+                const hasVideo = localStream.getVideoTracks().length > 0;
+                if (isVideo && !hasVideo) {
+                    navigator.mediaDevices.getUserMedia({
+                            audio: true,
+                            video: { width: { ideal: 640 }, height: { ideal: 480 }, facingMode: 'user' }
+                        })
+                        .then(function(stream) {
+                            const audioTrack = localStream.getAudioTracks()[0];
+                            if (audioTrack) {
+                                stream.addTrack(audioTrack);
+                            }
+                            localStream = stream;
+                            document.getElementById('localVideo').srcObject = stream;
+                            document.getElementById('localPlaceholder').style.display = 'none';
+                            updateMediaIndicator();
+                            incomingCall.answer(stream);
+                            handleConnectedCall(incomingCall, isVideo);
+                        })
+                        .catch(function(err) {
+                            incomingCall.answer(localStream);
+                            handleConnectedCall(incomingCall, isVideo);
+                        });
+                } else {
+                    incomingCall.answer(localStream);
+                    handleConnectedCall(incomingCall, isVideo);
+                }
+            } else {
+                const mediaConstraints = isVideo ? {
+                    audio: { echoCancellation: true, noiseSuppression: true },
+                    video: { width: { ideal: 640 }, height: { ideal: 480 }, facingMode: 'user' }
+                } : {
+                    audio: { echoCancellation: true, noiseSuppression: true },
+                    video: false
+                };
+
+                navigator.mediaDevices.getUserMedia(mediaConstraints)
+                    .then(function(stream) {
+                        localStream = stream;
+                        document.getElementById('localVideo').srcObject = stream;
+                        document.getElementById('localPlaceholder').style.display = isVideo ? 'none' : 'flex';
+                        if (!isVideo) {
+                            document.getElementById('localPlaceholder').innerHTML =
+                                '<i class="fas fa-microphone"></i><span>Audio Only</span>';
+                        }
+                        updateMediaIndicator();
+                        incomingCall.answer(stream);
+                        handleConnectedCall(incomingCall, isVideo);
+                    })
+                    .catch(function(err) {
+                        showToast('❌ Gagal akses media: ' + err.message, false);
+                        document.getElementById('incomingCallOverlay').classList.remove('show');
+                        document.getElementById('ringingAvatar').classList.remove('ringing');
+                        isIncomingCall = false;
+                    });
+            }
+
+            document.getElementById('incomingCallOverlay').classList.remove('show');
+            document.getElementById('ringingAvatar').classList.remove('ringing');
+            isIncomingCall = false;
+        }
+
+        function rejectCall() {
+            stopRingtone();
+            if (window._vibrateInterval) {
+                clearInterval(window._vibrateInterval);
+                window._vibrateInterval = null;
+            }
+            if (incomingCall) { incomingCall.close(); }
+            document.getElementById('incomingCallOverlay').classList.remove('show');
+            document.getElementById('ringingAvatar').classList.remove('ringing');
+            isIncomingCall = false;
+            showToast('📴 Panggilan ditolak', false);
+        }
+
+        // ========================================
+        // OUTGOING CALL
+        // ========================================
+        function makeCall() {
+            if (isCallActive) {
+                showToast('⚠️ Panggilan sudah aktif', false);
+                return;
+            }
+
+            const raw = document.getElementById('callInput').value.trim();
+            const inputGroup = document.getElementById('callInputGroup');
+            const statusDot = document.getElementById('callStatusDot');
+            const statusText = document.getElementById('callStatusText');
+
+            if (!raw) {
+                inputGroup.className = 'call-input-group error';
+                statusDot.className = 'dot-small error';
+                statusDot.style.background = '#ff6b6b';
+                statusText.textContent = '⚠️ Masukkan nomor tujuan';
+                showToast('⚠️ Masukkan nomor tujuan', false);
+                return;
+            }
+
+            const result = validatePhone(raw);
+
+            if (!result.valid) {
+                inputGroup.className = 'call-input-group error';
+                statusDot.className = 'dot-small error';
+                statusDot.style.background = '#ff6b6b';
+                statusText.textContent = result.message;
+                showToast(result.message, false);
+                return;
+            }
+
+            inputGroup.className = 'call-input-group success';
+            statusDot.className = 'dot-small active';
+            statusDot.style.background = 'var(--primary-light)';
+            statusText.textContent = '⏳ Menghubungi...';
+
+            const targetNumber = result.number;
+            if (targetNumber === myNumber) {
+                showToast('⚠️ Tidak bisa memanggil sendiri', false);
+                statusText.textContent = '⚠️ Tidak bisa memanggil sendiri';
+                return;
+            }
+
+            const targetPeerId = 'rc_' + targetNumber;
+            const displayNumber = targetNumber.slice(0, 4) + ' ' + targetNumber.slice(4, 7) + ' ' + targetNumber.slice(7);
+            setCallerInfo('Memanggil...', '+62 ' + displayNumber, '⏳ Menghubungi...');
+            setStatus('⏳ Menghubungi...', false);
+
+            const ensureMedia = () => {
+                return new Promise((resolve) => {
+                    if (localStream && localStream.getVideoTracks().length > 0) {
+                        resolve(localStream);
+                        return;
+                    }
+
+                    navigator.mediaDevices.getUserMedia({
+                            audio: { echoCancellation: true, noiseSuppression: true },
+                            video: { width: { ideal: 640 }, height: { ideal: 480 }, facingMode: 'user' }
+                        })
+                        .then(function(stream) {
+                            if (localStream) {
+                                const oldAudio = localStream.getAudioTracks()[0];
+                                if (oldAudio) {
+                                    stream.addTrack(oldAudio);
+                                }
+                                localStream.getTracks().forEach(t => t.stop());
+                            }
+                            localStream = stream;
+                            document.getElementById('localVideo').srcObject = stream;
+                            document.getElementById('localPlaceholder').style.display = 'none';
+                            updateMediaIndicator();
+                            resolve(stream);
+                        })
+                        .catch(function(err) {
+                            navigator.mediaDevices.getUserMedia({
+                                    audio: { echoCancellation: true, noiseSuppression: true },
+                                    video: false
+                                })
+                                .then(function(stream) {
+                                    if (localStream) {
+                                        localStream.getTracks().forEach(t => t.stop());
+                                    }
+                                    localStream = stream;
+                                    document.getElementById('localVideo').srcObject = stream;
+                                    document.getElementById('localPlaceholder').style.display = 'flex';
+                                    document.getElementById('localPlaceholder').innerHTML =
+                                        '<i class="fas fa-microphone"></i><span>Audio Only</span>';
+                                    updateMediaIndicator();
+                                    resolve(stream);
+                                })
+                                .catch(function(e2) {
+                                    showToast('❌ Gagal akses media: ' + e2.message, false);
+                                    statusText.textContent = '❌ Gagal akses media';
+                                    resolve(null);
+                                });
+                        });
+                });
+            };
+
+            ensureMedia().then(function(stream) {
+                if (!stream) return;
+                initiateCall(targetPeerId);
+            });
+        }
+
+        function initiateCall(targetPeerId) {
+            if (!peer) {
+                showToast('⚠️ Koneksi belum siap', false);
+                setStatus('Koneksi belum siap', false);
+                return;
+            }
+
+            const options = {
+                metadata: {
+                    video: true,
+                    caller: myNumber
+                }
+            };
+
+            try {
+                const call = peer.call(targetPeerId, localStream, options);
+                if (call) {
+                    handleConnectedCall(call, true);
+                    showToast('📞 Memanggil...', true);
+                } else {
+                    showToast('❌ Gagal memanggil', false);
+                    setStatus('Gagal memanggil', false);
+                    setCallerInfo('Menunggu', '-', 'Siap melakukan panggilan');
+                    document.getElementById('callStatusText').textContent = '❌ Gagal memanggil';
+                }
+            } catch (e) {
+                showToast('❌ Error: ' + e.message, false);
+                setStatus('Error', false);
+                setCallerInfo('Menunggu', '-', 'Siap melakukan panggilan');
+                document.getElementById('callStatusText').textContent = '❌ Error: ' + e.message;
+            }
+        }
+
+        // ========================================
+        // CONNECTED CALL
+        // ========================================
+        function handleConnectedCall(call, isVideo) {
+            currentCall = call;
+
+            call.on('stream', function(stream) {
+                console.log('📡 Stream remote diterima!');
+                remoteStream = stream;
+                const videoElement = document.getElementById('remoteVideo');
+                videoElement.srcObject = stream;
+                videoElement.style.display = 'block';
+                document.getElementById('remotePlaceholder').style.display = 'none';
+                isCallActive = true;
+
+                const audioTracks = stream.getAudioTracks();
+                if (audioTracks.length > 0) {
+                    audioTracks.forEach(t => t.enabled = true);
+                }
+
+                setStatus('✅ Terhubung', true);
+                setCallerInfo('Mitra', document.getElementById('callerNumberDisplay').textContent, '📞 Sedang bicara');
+                startCallTimer();
+                showToast('📞 Panggilan aktif', true);
+                document.getElementById('callStatusText').textContent = '✅ Terhubung - Sedang bicara';
+                document.getElementById('callStatusDot').className = 'dot-small active';
+                document.getElementById('callStatusDot').style.background = 'var(--primary-light)';
+            });
+
+            call.on('close', function() {
+                showToast('📴 Panggilan berakhir', false);
+                resetCallState();
+            });
+
+            call.on('error', function(err) {
+                showToast('❌ Error: ' + err.message, false);
+                resetCallState();
+            });
+
+            const number = call.peer.replace('rc_', '');
+            const displayNumber = number.slice(0, 4) + ' ' + number.slice(4, 7) + ' ' + number.slice(7);
+            setCallerInfo('Menghubungkan...', '+62 ' + displayNumber, '⏳ Menghubungi...');
+            setStatus('⏳ Menghubungi...', false);
+        }
+
+        function endCall() {
+            stopRingtone();
+            if (window._vibrateInterval) {
+                clearInterval(window._vibrateInterval);
+                window._vibrateInterval = null;
+            }
+            if (currentCall) {
+                try { currentCall.close(); } catch (e) {}
+            }
+            resetCallState();
+            showToast('📴 Panggilan diakhiri', false);
+        }
+
+        function resetCallState() {
+            if (callTimerInterval) {
+                clearInterval(callTimerInterval);
+                callTimerInterval = null;
+            }
+            document.getElementById('callTimer').textContent = '00:00';
+
+            if (remoteStream) {
+                remoteStream = null;
+            }
+            const videoElement = document.getElementById('remoteVideo');
+            videoElement.srcObject = null;
+            videoElement.style.display = 'block';
+
+            isCallActive = false;
+            currentCall = null;
+            incomingCall = null;
+            isIncomingCall = false;
+            document.getElementById('incomingCallOverlay').classList.remove('show');
+            document.getElementById('ringingAvatar').classList.remove('ringing');
+
+            document.getElementById('remotePlaceholder').style.display = 'flex';
+            setCallerInfo('Menunggu', '-', 'Siap melakukan panggilan');
+            setStatus('Siap memanggil', false);
+            document.getElementById('callInput').value = '';
+            document.getElementById('callStatusText').textContent = 'Masukkan nomor tujuan (08xxxxxxxx)';
+            document.getElementById('callStatusDot').className = 'dot-small';
+            document.getElementById('callStatusDot').style.background = '#555';
+            document.getElementById('callInputGroup').className = 'call-input-group';
+            document.getElementById('inputStatus').textContent = '';
+        }
+
+        // ========================================
+        // STATUS
+        // ========================================
+        function setStatus(text, isConnected) {
+            document.getElementById('statusText').textContent = text;
+            const dot = document.getElementById('statusDot');
+            dot.className = 'dot' + (isConnected ? ' active' : '');
+        }
+
+        function setCallerInfo(name, number, status) {
+            document.getElementById('callerName').textContent = name || 'Menunggu';
+            document.getElementById('callerNumberDisplay').textContent = number || '-';
+            document.getElementById('callerStatus').textContent = status || 'Siap melakukan panggilan';
+        }
+
+        // ========================================
+        // TIMER
+        // ========================================
+        function startCallTimer() {
+            if (callTimerInterval) clearInterval(callTimerInterval);
+            let seconds = 0;
+            callTimerInterval = setInterval(function() {
+                seconds++;
+                const m = String(Math.floor(seconds / 60)).padStart(2, '0');
+                const s = String(seconds % 60).padStart(2, '0');
+                document.getElementById('callTimer').textContent = m + ':' + s;
+            }, 1000);
+        }
+
+        // ========================================
+        // TOGGLE FUNCTIONS
+        // ========================================
+        function toggleMute() {
+            if (!localStream) return;
+            const track = localStream.getAudioTracks()[0];
+            if (!track) return;
+            isMuted = !isMuted;
+            track.enabled = !isMuted;
+            const btn = document.getElementById('micBtn');
+            btn.className = 'ctrl-btn' + (isMuted ? ' off' : ' active');
+            btn.innerHTML = isMuted ?
+                '<i class="fas fa-microphone-slash"></i><span class="tooltip">Mikrofon</span>' :
+                '<i class="fas fa-microphone"></i><span class="tooltip">Mikrofon</span>';
+            updateMediaIndicator();
+            showToast(isMuted ? '🔇 Mikrofon mati' : '🎤 Mikrofon aktif');
+        }
+
+        function toggleVideo() {
+            if (!localStream) return;
+            const track = localStream.getVideoTracks()[0];
+            if (!track) return;
+            isVideoOff = !isVideoOff;
+            track.enabled = !isVideoOff;
+            const btn = document.getElementById('videoBtn');
+            btn.className = 'ctrl-btn' + (isVideoOff ? ' off' : ' active');
+            btn.innerHTML = isVideoOff ?
+                '<i class="fas fa-video-slash"></i><span class="tooltip">Kamera</span>' :
+                '<i class="fas fa-video"></i><span class="tooltip">Kamera</span>';
+            const placeholder = document.getElementById('localPlaceholder');
+            if (isVideoOff) {
+                placeholder.style.display = 'flex';
+                placeholder.innerHTML = '<i class="fas fa-video-slash" style="color:#ff6b6b;"></i><span>Kamera mati</span>';
+                showToast('📷 Kamera mati');
+            } else {
+                placeholder.style.display = 'none';
+                showToast('📷 Kamera aktif');
+            }
+            updateMediaIndicator();
+        }
+
+        function toggleSpeaker() {
+            isSpeakerOn = !isSpeakerOn;
+            const btn = document.getElementById('speakerBtn');
+            btn.className = 'ctrl-btn' + (isSpeakerOn ? ' speaker-on' : '');
+            btn.innerHTML = isSpeakerOn ?
+                '<i class="fas fa-volume-up"></i><span class="tooltip">Speaker</span>' :
+                '<i class="fas fa-volume-off"></i><span class="tooltip">Speaker</span>';
+            const remoteVideo = document.getElementById('remoteVideo');
+            if (remoteVideo) {
+                remoteVideo.volume = isSpeakerOn ? 1.0 : 0.3;
+            }
+            showToast(isSpeakerOn ? '🔊 Speaker aktif' : '🔈 Earpiece aktif');
+        }
+
+        function toggleFullscreen() {
+            const container = document.getElementById('appContainer');
+            if (!document.fullscreenElement) {
+                container.requestFullscreen?.() || container.webkitRequestFullscreen?.();
+                document.querySelector('.zoom-btn').innerHTML = '<i class="fas fa-compress"></i>';
+                showToast('⛶ Mode layar penuh');
+            } else {
+                document.exitFullscreen?.() || document.webkitExitFullscreen?.();
+                document.querySelector('.zoom-btn').innerHTML = '<i class="fas fa-expand"></i>';
+                showToast('⛶ Keluar layar penuh');
+            }
+        }
+
+        // ========================================
+        // DRAG LOCAL VIDEO
+        // ========================================
+        let isDragging = false;
+        let dragOffsetX, dragOffsetY;
+
+        // ========================================
+        // LOGOUT
+        // ========================================
+        function logout() {
+            stopRingtone();
+            if (window._vibrateInterval) {
+                clearInterval(window._vibrateInterval);
+                window._vibrateInterval = null;
+            }
+            if (isCallActive) endCall();
+            if (localStream) {
+                localStream.getTracks().forEach(function(t) { t.stop(); });
+                localStream = null;
+            }
+            if (peer) { peer.destroy();
+                peer = null; }
+            clearUser();
+            document.getElementById('appContainer').classList.remove('visible');
+            document.getElementById('loginScreen').classList.remove('hidden');
+            document.getElementById('loginBtn').disabled = false;
+            document.getElementById('loginBtn').innerHTML = '<i class="fas fa-sign-in-alt"></i> Masuk';
+            document.getElementById('phoneInput').value = '';
+            document.getElementById('phoneWrapper').className = 'input-wrapper';
+            document.getElementById('phoneHelper').className = 'helper-text';
+            document.getElementById('phoneHelper').innerHTML =
+                '<span class="icon">ℹ️</span><span>Masukkan 10 digit angka (contoh: 8123456789)</span>';
+            document.getElementById('loginSuccess').className = 'login-success';
+            showToast('👋 Logout berhasil', false);
+        }
+
+        // ========================================
+        // CLEANUP
+        // ========================================
+        window.addEventListener('beforeunload', function() {
+            stopRingtone();
+            if (window._vibrateInterval) {
+                clearInterval(window._vibrateInterval);
+                window._vibrateInterval = null;
+            }
+            if (currentCall) { try { currentCall.close(); } catch (e) {} }
+            if (localStream) { localStream.getTracks().forEach(function(t) { t.stop(); }); }
+            if (peer) { peer.destroy(); }
+        });
+
+        // ========================================
+        // DRAG LOCAL VIDEO - EVENT LISTENERS
+        // ========================================
+        document.addEventListener('DOMContentLoaded', function() {
+            const container = document.getElementById('localVideoContainer');
+
+            container.addEventListener('mousedown', function(e) {
+                if (e.target.closest('.local-label')) return;
+                const rect = container.getBoundingClientRect();
+                dragOffsetX = e.clientX - rect.left;
+                dragOffsetY = e.clientY - rect.top;
+                isDragging = true;
+                container.style.cursor = 'grabbing';
+                container.style.transition = 'none';
+                e.preventDefault();
+            });
+
+            document.addEventListener('mousemove', function(e) {
+                if (!isDragging) return;
+                const container = document.getElementById('localVideoContainer');
+                const parentRect = container.parentElement.getBoundingClientRect();
+                let x = e.clientX - parentRect.left - dragOffsetX;
+                let y = e.clientY - parentRect.top - dragOffsetY;
+                const maxX = parentRect.width - container.offsetWidth - 10;
+                const maxY = parentRect.height - container.offsetHeight - 60;
+                x = Math.max(10, Math.min(maxX, x));
+                y = Math.max(10, Math.min(maxY, y));
+                container.style.left = x + 'px';
+                container.style.right = 'auto';
+                container.style.bottom = 'auto';
+                container.style.top = y + 'px';
+            });
+
+            document.addEventListener('mouseup', function() {
+                if (isDragging) {
+                    isDragging = false;
+                    const container = document.getElementById('localVideoContainer');
+                    container.style.cursor = 'pointer';
+                    container.style.transition = '';
+                }
+            });
+
+            container.addEventListener('touchstart', function(e) {
+                const touch = e.touches[0];
+                const rect = container.getBoundingClientRect();
+                dragOffsetX = touch.clientX - rect.left;
+                dragOffsetY = touch.clientY - rect.top;
+                isDragging = true;
+                container.style.cursor = 'grabbing';
+                container.style.transition = 'none';
+                e.preventDefault();
+            }, { passive: false });
+
+            document.addEventListener('touchmove', function(e) {
+                if (!isDragging) return;
+                const touch = e.touches[0];
+                const container = document.getElementById('localVideoContainer');
+                const parentRect = container.parentElement.getBoundingClientRect();
+                let x = touch.clientX - parentRect.left - dragOffsetX;
+                let y = touch.clientY - parentRect.top - dragOffsetY;
+                const maxX = parentRect.width - container.offsetWidth - 10;
+                const maxY = parentRect.height - container.offsetHeight - 60;
+                x = Math.max(10, Math.min(maxX, x));
+                y = Math.max(10, Math.min(maxY, y));
+                container.style.left = x + 'px';
+                container.style.right = 'auto';
+                container.style.bottom = 'auto';
+                container.style.top = y + 'px';
+            }, { passive: false });
+
+            document.addEventListener('touchend', function() {
+                if (isDragging) {
+                    isDragging = false;
+                    const container = document.getElementById('localVideoContainer');
+                    container.style.cursor = 'pointer';
+                    container.style.transition = '';
+                }
+            });
+
+            // Check saved login
+            const saved = getUser();
+            if (saved) {
+                const display = saved.slice(0, 4) + ' ' + saved.slice(4, 7) + ' ' + saved.slice(7);
+                document.getElementById('savedInfo').style.display = 'block';
+                document.getElementById('savedNumber').textContent = '+62 ' + display;
+                document.getElementById('phoneInput').value = saved;
+                setTimeout(function() { handleLogin(); }, 500);
+            }
+
+            console.log('✅ RealCall Pro siap!');
+        });
+
+        console.log('🚀 RealCall Pro loaded!');
+    </script>
+
+</body>
+</html>
